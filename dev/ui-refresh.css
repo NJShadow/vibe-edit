@@ -1,0 +1,276 @@
+/* ============ v4.6 VISUAL REFRESH ============
+   Warmer, deeper, more alive — without touching layout logic or costing frames.
+   Everything derives from each theme's own tokens, plus one new one per theme:
+   --accent2, a companion hue for gradients. Static gradients and shadows only:
+   nothing here animates during playback or forces extra compositing. */
+[data-theme="obsidian"]{--accent2:#ff6f91}
+[data-theme="midnight"]{--accent2:#a78bfa}
+[data-theme="velvet"]{--accent2:#818cf8}
+[data-theme="forest"]{--accent2:#2dd4bf}
+[data-theme="ember"]{--accent2:#ffc24b}
+[data-theme="ocean"]{--accent2:#7c8cff}
+[data-theme="mono"]{--accent2:#9a9a9a}
+[data-theme="daylight"]{--accent2:#8b5cf6}
+[data-theme="paper"]{--accent2:#d97706}
+[data-theme="rose"]{--accent2:#c084fc}
+[data-theme="dorfic"]{--accent2:#f59e0b}
+[data-theme="runner"]{--accent2:#ff7a3d}
+[data-theme="void"]{--accent2:#7d8db0}
+[data-theme="glacier"]{--accent2:#7aa7ff}
+[data-theme="nebula"]{--accent2:#f472b6}
+[data-theme="crimson"]{--accent2:#fb923c}
+/* Derived tokens live on body (where data-theme is) so var(--accent) resolves. */
+body{
+  --grad:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));
+  --glow:color-mix(in srgb,var(--accent) 34%,transparent);
+  --glow-soft:color-mix(in srgb,var(--accent) 16%,transparent);
+  --hl:rgba(255,255,255,.055);          /* top-edge highlight on raised surfaces */
+  --card:color-mix(in oklab,var(--panel) 94%,var(--text) 2%);
+  --card-hi:color-mix(in oklab,var(--panel2) 90%,var(--text) 3%);
+  --elev1:0 1px 0 var(--hl) inset,0 1px 2px rgba(0,0,0,.25),0 6px 18px rgba(0,0,0,.22);
+  --elev2:0 1px 0 var(--hl) inset,0 12px 34px rgba(0,0,0,.38),0 2px 6px rgba(0,0,0,.25);
+  --r-card:14px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  background:
+    radial-gradient(1100px 640px at 8% -12%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 62%),
+    radial-gradient(900px 560px at 104% 108%,color-mix(in srgb,var(--accent2,var(--accent)) 11%,transparent),transparent 60%),
+    radial-gradient(700px 420px at 60% 40%,color-mix(in srgb,var(--accent) 4%,transparent),transparent 70%),
+    var(--bg);
+}
+[data-theme="daylight"],[data-theme="paper"],[data-theme="runner"],[data-theme="dorfic"]{
+  --hl:rgba(255,255,255,.85);
+  --card:var(--panel);--card-hi:var(--panel2);
+  --elev1:0 1px 0 var(--hl) inset,0 1px 2px rgba(30,30,50,.08),0 6px 18px rgba(30,30,60,.08);
+  --elev2:0 1px 0 var(--hl) inset,0 14px 36px rgba(30,30,60,.16),0 2px 6px rgba(30,30,60,.08);
+}
+::selection{background:var(--glow)}
+
+/* ---- frame: floating cards on an ambient background ---- */
+#app{grid-template-rows:54px 1fr auto;padding:0 10px 10px;row-gap:10px}
+#main{background:transparent;column-gap:10px}
+#topbar{background:transparent;border-bottom:none;padding:0 4px;gap:8px}
+.panel{background:linear-gradient(180deg,var(--card-hi),var(--card) 180px);border:1px solid var(--border);
+  border-radius:var(--r-card);box-shadow:var(--elev1);overflow:hidden}
+#inspector{border-left:1px solid var(--border)}
+#center{background:transparent;border-radius:var(--r-card)}
+#bottom{border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--elev1);
+  background:linear-gradient(180deg,var(--card-hi),var(--card) 90px)}
+#tlResize{height:8px;top:-4px}
+#tlResize::after{content:'';position:absolute;left:50%;top:3px;width:44px;height:3px;margin-left:-22px;border-radius:3px;
+  background:var(--border2);opacity:0;transition:opacity .2s}
+#bottom:hover #tlResize::after{opacity:.8}
+.panel-head{padding:12px 14px 9px;letter-spacing:1.2px;font-size:10.5px}
+
+/* ---- top bar ---- */
+.brand{gap:9px;padding:0 6px 0 4px}
+.brandmark{width:30px;height:28px;filter:drop-shadow(0 2px 8px var(--glow))}
+.brandname{font-size:14.5px;letter-spacing:1.6px;font-weight:700}
+.brandname b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand small{padding:2px 6px;border-radius:20px;background:var(--panel3);color:var(--muted);letter-spacing:.8px;font-size:9.5px}
+#projName{height:32px;border-radius:9px;padding:4px 11px;background:color-mix(in oklab,var(--panel) 70%,transparent);
+  border:1px solid var(--border);width:210px;transition:border-color .15s,background .15s,box-shadow .15s}
+#projName:hover{border-color:var(--border2)}
+#projName:focus{box-shadow:0 0 0 3px var(--glow-soft)}
+.divider{height:22px;opacity:.7}
+.tbtn{border-radius:9px;transition:background .15s var(--ease),color .15s,transform .12s var(--ease),box-shadow .15s}
+.tbtn:active:not(:disabled){transform:translateY(1px) scale(.98)}
+#topbar .tbtn:not(.primary){height:34px;padding:0 10px}
+#topbar .tbtn:not(.primary):hover{background:color-mix(in oklab,var(--panel3) 85%,transparent);box-shadow:0 1px 0 var(--hl) inset}
+.tbtn.primary{background:var(--grad);color:var(--accent-ink);border:none;border-radius:10px;padding:8px 16px;
+  box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 6px 18px var(--glow),0 1px 3px rgba(0,0,0,.25);position:relative;overflow:hidden}
+.tbtn.primary::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+  transform:translateX(-120%);transition:transform .7s var(--ease);pointer-events:none}
+.tbtn.primary:hover{filter:brightness(1.06) saturate(1.05);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 8px 24px var(--glow),0 1px 3px rgba(0,0,0,.25)}
+.tbtn.primary:hover::after{transform:translateX(120%)}
+.tbtn.primary:disabled{filter:grayscale(.6);box-shadow:none}
+#exportBtn{height:36px;padding:0 18px;font-size:13px}
+
+/* ---- media bin ---- */
+#dropzone{border:1.5px dashed color-mix(in oklab,var(--border2) 80%,var(--accent) 20%);border-radius:12px;padding:16px 10px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 4%,transparent),transparent);transition:all .2s var(--ease)}
+#dropzone:hover,#dropzone.over{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 4px var(--glow-soft) inset}
+.gen-row .tbtn{border-radius:9px;background:var(--panel2);box-shadow:0 1px 0 var(--hl) inset}
+.gen-row .tbtn:hover{border-color:color-mix(in oklab,var(--accent) 45%,var(--border2));color:var(--text);background:var(--panel3)}
+.bin-item{border-radius:11px;background:var(--card-hi);box-shadow:0 1px 0 var(--hl) inset;transition:border-color .15s,transform .15s var(--ease),box-shadow .15s}
+.bin-item:hover{transform:translateY(-1px);box-shadow:0 1px 0 var(--hl) inset,0 6px 16px rgba(0,0,0,.22)}
+.bin-item.selected{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow-soft)}
+.bin-thumb{border-radius:7px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+
+/* ---- preview & transport ---- */
+#stage{padding:10px 10px 12px}
+#stageInner{border-radius:12px;border:1px solid color-mix(in oklab,var(--border2) 70%,transparent);
+  box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.25),0 0 90px color-mix(in srgb,var(--accent) 7%,transparent)}
+[data-theme="daylight"] #stageInner,[data-theme="paper"] #stageInner,[data-theme="runner"] #stageInner,[data-theme="dorfic"] #stageInner{box-shadow:0 20px 50px rgba(30,30,60,.22)}
+#stageEmpty{color:var(--muted)}
+#stageEmpty .big{font-size:17px;color:var(--text);letter-spacing:.2px}
+#stageEmpty>div::before{content:'';display:block;width:64px;height:64px;margin:0 auto 16px;border-radius:50%;
+  background:conic-gradient(from 210deg,var(--accent),var(--accent2,var(--accent)),var(--accent));
+  -webkit-mask:radial-gradient(circle,transparent 52%,#000 53%);mask:radial-gradient(circle,transparent 52%,#000 53%);
+  opacity:.9;filter:drop-shadow(0 0 18px var(--glow));animation:v46spin 9s linear infinite}
+@keyframes v46spin{to{transform:rotate(360deg)}}
+#transport{margin:0 10px 2px;padding:6px 10px;border:1px solid var(--border);border-radius:14px;gap:3px;
+  background:linear-gradient(180deg,var(--card-hi),var(--card));box-shadow:var(--elev1)}
+.tpbtn{border-radius:9px;transition:background .15s var(--ease),color .15s,transform .12s var(--ease)}
+.tpbtn:active{transform:scale(.94)}
+.tpbtn.play{width:40px;height:40px;border-radius:50%;background:var(--grad);color:var(--accent-ink);margin:0 4px;
+  box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 6px 18px var(--glow)}
+.tpbtn.play:hover{background:var(--grad);color:var(--accent-ink);filter:brightness(1.08);transform:scale(1.05)}
+.tpbtn.play svg{width:18px;height:18px}
+#tcode{white-space:nowrap;font-size:13px;padding:6px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--border);
+  box-shadow:0 1px 2px rgba(0,0,0,.25) inset;letter-spacing:.6px}
+#tcode .total{opacity:.8}
+.tsel.pbq{width:auto;min-width:64px;height:28px;padding:2px 6px;border-radius:8px}
+#fpsTag{white-space:nowrap;padding:0 4px}
+.meter .mtrack{height:6px;background:var(--bg);box-shadow:0 1px 1px rgba(0,0,0,.3) inset}
+.meter .mbar{background:linear-gradient(90deg,var(--ok) 0 70%,#f5c542 85%,var(--danger))!important;background-size:92px 100%!important;border-radius:3px}
+/* the transport fits its column at any window width: fixed-size controls never squash, the meter
+   shrinks, and less important items step aside as the column narrows (container queries on #transport) */
+#transport{container-type:inline-size;min-width:0;overflow:clip;overflow-clip-margin:10px}
+#transport>.tpbtn,#tcode,#fpsTag,#transport>.tsel.pbq,#pbHalfTag{flex:none}
+#transport>.meter{flex:0 1 92px;min-width:48px}
+@container (max-width:830px){#fpsTag{display:none}}
+@container (max-width:720px){#tcode .total{display:none}#pbHalfTag{display:none!important}}
+@container (max-width:600px){#stepBack,#stepFwd,#pbQual{display:none}#shotBtn{margin-left:0!important}}
+@container (max-width:560px){#transport>.meter{min-width:40px;margin-left:4px}}
+@container (max-width:480px){#transport>.tpbtn:not(.play){width:28px}#transport>.meter{min-width:40px;margin-left:4px}#tcode{padding:6px 8px;letter-spacing:.3px}}
+
+/* ---- inspector ---- */
+#inspBody{padding:4px 14px 18px}
+.sec.accSec>h4{border-radius:8px;padding:9px 6px 9px 4px;transition:color .15s,background .15s}
+.sec.accSec>h4:hover{background:color-mix(in oklab,var(--panel3) 60%,transparent)}
+.sec.accSec:not(.collapsed)>h4{color:var(--text)}
+.insp-tabs{padding:4px 0 12px}
+.itab{border-radius:9px;transition:all .15s var(--ease)}
+.itab.on{background:var(--grad);color:var(--accent-ink);border-color:transparent;box-shadow:0 4px 12px var(--glow)}
+/* slider rows: label | slider | value | reset | keyframes — one line, no wrap */
+.ctl{grid-template-columns:80px minmax(0,1fr) 52px 16px auto;column-gap:6px;margin-bottom:6px;min-height:24px}
+/* labels and values stay on one line (the row's tooltip carries the full wording) */
+.ctl>label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctl>.val{white-space:nowrap;overflow:hidden;text-overflow:clip}
+/* a roomier inspector on wide windows */
+@media (min-width:1200px){#main{grid-template-columns:248px minmax(0,1fr) 280px}}
+@media (min-width:1400px){#main{grid-template-columns:248px minmax(0,1fr) 296px}}   /* (the wide-Transcript variants are in ai.css) */
+.balrow .ctl{grid-template-columns:66px minmax(0,1fr) 52px 16px auto}
+/* a narrow inspector (small windows): label/value/keyframes/reset on one line,
+   the slider full width below it — on one line the slider shrank to a few pixels */
+#inspBody{container-type:inline-size}
+/* Flip: two buttons that never wrap — the short labels take over when narrow */
+.flip-row{display:flex;gap:6px}
+.flip-row>.tbtn{flex:1 1 0;min-width:0;justify-content:center;white-space:nowrap;overflow:hidden}
+.flip-row .lbl-s{display:none}
+@container (max-width:240px){
+  #inspBody .ctl{grid-template-columns:minmax(0,1fr) auto auto auto;row-gap:3px}
+  #inspBody .ctl>input[type=range]{grid-column:1/-1;grid-row:2}
+  .flip-row>.tbtn{padding:6px 4px}
+  .flip-row .lbl-l{display:none}
+  .flip-row .lbl-s{display:inline}
+}
+input[type=range]{height:4px;background:linear-gradient(90deg,color-mix(in oklab,var(--border2) 100%,transparent),var(--border2));border-radius:3px}
+input[type=range]::-webkit-slider-thumb{width:14px;height:14px;background:#fff;border:0;
+  box-shadow:0 0 0 2px var(--accent),0 2px 6px rgba(0,0,0,.4);transition:transform .15s var(--spring),box-shadow .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2);background:#fff;box-shadow:0 0 0 2px var(--accent),0 0 0 6px var(--glow-soft),0 2px 6px rgba(0,0,0,.4)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
+.tin,.tsel,textarea.tin{border-radius:8px;background:color-mix(in oklab,var(--bg) 55%,var(--panel2));transition:border-color .15s,box-shadow .15s}
+.tin:focus,.tsel:focus,textarea.tin:focus{box-shadow:0 0 0 3px var(--glow-soft)}
+.chip{transition:all .15s var(--ease)}
+.chip.on{background:var(--grad);border-color:transparent;box-shadow:0 3px 10px var(--glow)}
+.filt{border-radius:9px;transition:all .15s var(--ease)}
+.filt:hover{transform:translateY(-1px)}
+.filt.on{box-shadow:0 0 0 3px var(--glow-soft)}
+
+/* ---- timeline ---- */
+#tlbar{padding:7px 10px;border-bottom:1px solid var(--border)}
+.toolbtn{border-radius:9px;transition:all .15s var(--ease)}
+.toolbtn:active{transform:scale(.94)}
+.toolbtn.on{background:var(--accent-soft);color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent) inset}
+#trackHeads{background:transparent}
+.thead{background:linear-gradient(90deg,color-mix(in oklab,var(--panel2) 70%,transparent),transparent)}
+.thead .tname{letter-spacing:.6px}
+/* the rarely used Target and Remove buttons appear on hover (Target stays while it is on), so track names like TITLES fit */
+.thead .delTrkBtn,.thead .tgtBtn:not(.on){display:none}
+.thead:hover .delTrkBtn,.thead:hover .tgtBtn,.thead:focus-within .delTrkBtn,.thead:focus-within .tgtBtn{display:grid}
+#tlScroll{background:color-mix(in oklab,var(--bg) 80%,var(--panel))}
+#ruler{background:linear-gradient(180deg,var(--card-hi),var(--card))}
+.track:nth-child(even){background:color-mix(in srgb,var(--text) 1.6%,transparent)}
+.addtrk{border-radius:8px}
+.clip{border-radius:8px;border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 -10px 18px rgba(0,0,0,.10) inset,0 2px 6px rgba(0,0,0,.28);
+  transition:box-shadow .15s,filter .15s}
+.clip:hover{filter:brightness(1.07)}
+.clip.selected{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent),0 0 16px var(--glow),0 2px 8px rgba(0,0,0,.3)}
+.clip .cthumbs{position:absolute;inset:0;background-repeat:repeat-x;background-size:auto 100%;background-position:0 0;
+  opacity:.5;pointer-events:none;border-radius:inherit;
+  -webkit-mask:linear-gradient(180deg,rgba(0,0,0,.95),rgba(0,0,0,.55));mask:linear-gradient(180deg,rgba(0,0,0,.95),rgba(0,0,0,.55))}
+.clip .cname{position:relative;font-size:10.5px;letter-spacing:.15px}
+.clip .cdur{position:relative}
+.clip.text .cbody{flex-direction:row;align-items:center;gap:8px}
+.clip.text .cdur{margin-top:0}
+/* audio: the name and length sit on a small pill in the clip's own color, so the waveform never runs through the text */
+.clip.audio .cbody{justify-content:flex-start;align-items:flex-start;padding:3px 6px;gap:1px}
+.clip.audio .cname,.clip.audio .cdur{max-width:100%;padding:0 5px;border-radius:4px;background:color-mix(in srgb,var(--clip-a2) 94%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--clip-a2) 50%,transparent);line-height:14px}
+.clip.audio .cdur{line-height:12px;margin-top:0}
+.clip.tiny .cbody{display:none}
+.clip .htrim::after{width:3px;height:52%;background:rgba(255,255,255,.9);box-shadow:0 0 6px rgba(0,0,0,.4)}
+#playhead .line{width:2px;left:-1px;background:linear-gradient(180deg,var(--scrub),color-mix(in srgb,var(--scrub) 55%,transparent));box-shadow:0 0 10px var(--glow)}
+#playhead .cap{background:var(--grad);filter:drop-shadow(0 2px 5px var(--glow))}
+.kfi{background:var(--grad);box-shadow:0 0 6px var(--glow)}
+
+/* ---- modals, menus, toasts ---- */
+#overlay{background:rgba(6,8,14,.5);backdrop-filter:blur(6px) saturate(1.1)}
+#overlay.show>.modal{animation:v46pop .28s var(--spring)}
+@keyframes v46pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.modal{border-radius:18px;border:1px solid var(--border2);position:relative;
+  background:linear-gradient(180deg,var(--card-hi),var(--panel) 160px);box-shadow:var(--elev2),0 30px 80px rgba(0,0,0,.35)}
+.modal::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--grad);opacity:.85;z-index:1}
+.modal-head h3{font-size:16px;letter-spacing:.1px}
+.modal-foot{border-top:1px solid var(--border);background:color-mix(in oklab,var(--bg) 25%,transparent)}
+.modal-foot{justify-content:flex-end}   /* actions sit on the right in every dialog (a .note or spacer takes the left) */
+/* one secondary-button style: text-only buttons inside the inspector and dialogs get the same bordered look */
+#inspBody .tbtn:not(.primary):not(.vtgl),.modal-body .tbtn:not(.primary),.modal-foot .tbtn:not(.primary){
+  border-color:var(--border);background:var(--panel2);color:var(--text);box-shadow:0 1px 0 var(--hl) inset}
+#inspBody .tbtn:not(.primary):not(.vtgl):hover,.modal-body .tbtn:not(.primary):hover,.modal-foot .tbtn:not(.primary):hover{
+  border-color:color-mix(in oklab,var(--accent) 45%,var(--border2));background:var(--panel3)}
+#inspBody .tbtn.danger,.modal .tbtn.danger{color:var(--danger)}
+#inspBody .tbtn.danger:hover,.modal .tbtn.danger:hover{background:var(--danger);color:#fff}
+.mclose{transition:all .15s}
+.menu{border-radius:14px;padding:6px;box-shadow:var(--elev2);animation:v46menu .16s var(--ease);
+  background:linear-gradient(180deg,var(--card-hi),var(--panel2))}
+@keyframes v46menu{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+.menu .mitem{border-radius:9px;transition:background .12s}
+/* every row the same height, with or without a shortcut badge */
+.menu .mitem{min-height:34px}
+.pal-item{min-height:34px}
+.menu .mitem:hover{background:var(--accent-soft)}
+.toast{border-radius:12px;padding:10px 16px 10px 14px;box-shadow:var(--elev2);animation:v46toast .38s var(--spring);
+  background:linear-gradient(180deg,var(--card-hi),var(--panel2))}
+.toast::before{content:'';width:8px;height:8px;border-radius:50%;flex:none;background:var(--muted)}
+.toast.ok::before{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.toast.err::before{background:var(--danger);box-shadow:0 0 8px var(--danger)}
+@keyframes v46toast{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+.pbar{height:6px;border-radius:6px}
+.pbar i{background:var(--grad);box-shadow:0 0 10px var(--glow)}
+.imp-bar i,.hqbar{background:var(--grad)}
+.preset{border-radius:12px;transition:all .15s var(--ease)}
+.preset.on{box-shadow:0 0 0 3px var(--glow-soft)}
+.exp-kind .kind{border-radius:12px;transition:all .15s var(--ease)}
+.exp-kind .kind.on{background:var(--grad);border-color:transparent;box-shadow:0 6px 16px var(--glow)}
+.seg{border-radius:10px}
+.seg button.on{background:var(--grad)}
+.gif-chip.on{background:var(--grad);border-color:transparent}
+.theme-opt{border-radius:10px;transition:background .12s}
+.theme-opt.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow-soft)}
+kbd{border-radius:6px;box-shadow:0 1px 0 var(--hl) inset}
+::-webkit-scrollbar-thumb{background:color-mix(in oklab,var(--border2) 85%,transparent);background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:content-box}
+@media (max-width:1150px){#projName{width:130px}}
+.tbtn.aibtn{color:var(--text);border:1px solid color-mix(in srgb,var(--accent) 35%,var(--border))!important;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,transparent),color-mix(in srgb,var(--accent2,var(--accent)) 12%,transparent))}
+.tbtn.aibtn svg{color:var(--accent)}
+.tbtn.aibtn:hover{box-shadow:0 0 0 3px var(--glow-soft),0 1px 0 var(--hl) inset!important}
+#tlEmpty{align-content:center;gap:4px;font-size:12.5px}
+#tlEmpty span{opacity:.8}
+.exp-kind .kind.on{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,var(--panel2)),color-mix(in srgb,var(--accent2,var(--accent)) 16%,var(--panel2)));
+  color:var(--text);border-color:var(--accent);box-shadow:0 0 0 3px var(--glow-soft),0 6px 18px color-mix(in srgb,var(--accent) 18%,transparent)}
+.bin-empty{padding:26px 12px;color:var(--faint)}
+.sw i:last-child{background-image:linear-gradient(135deg,transparent 45%,rgba(255,255,255,.35))}

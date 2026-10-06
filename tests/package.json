@@ -1,0 +1,30 @@
+{
+  "name": "vibe-edit-tests",
+  "private": true,
+  "description": "Headless verification harness for Vibe Edit",
+  "scripts": {
+    "setup": "npm install",
+    "tdz": "node tdz-scan.js",
+    "smoke": "node smoke.js",
+    "cuts": "node cut-engine.js",
+    "ui": "node ai-ui.js",
+    "speech": "node ai-speech.js",
+    "visual": "node ai-visual.js",
+    "scenes-ffmpeg": "node scene-ffmpeg.js",
+    "all": "node tdz-scan.js && node smoke.js && node cut-engine.js && node ai-visual.js && node ai-ui.js && node ai-speech.js && node scene-ffmpeg.js && node ge2e-reference.js && node pro-tools.js && node pro-grade.js && node review-fixes.js",
+    "pro": "node pro-tools.js && node pro-grade.js",
+    "grade": "node pro-grade.js",
+    "ge2e": "node ge2e-reference.js",
+    "desktop-pro": "node desktop-pro.js",
+    "desktop-quit": "node desktop-quit.js",
+    "review": "node review-fixes.js"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "3.0.2",
+    "@mediapipe/face_detection": "^0.4.1646425229",
+    "@sparticuz/chromium": "^131.0.0",
+    "acorn": "^8.12.0",
+    "puppeteer-core": "^23.0.0",
+    "sts-whisper-tiny": "^1.0.0"
+  }
+}

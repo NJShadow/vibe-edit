@@ -1,0 +1,11 @@
+# Windows batch files must keep CRLF line endings to run correctly
+*.cmd text eol=crlf
+# Binary assets
+*.wasm binary
+*.onnx binary
+*.f16 binary
+*.bin binary
+*.f32 binary
+*.wav binary
+*.webm binary
+*.png binary

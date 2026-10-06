@@ -1,0 +1,84 @@
+{
+ "rate": 170,
+ "voice": "en-us+m3",
+ "segments": [
+  {
+   "text": "Let's get started. The first item on the agenda is the new bus schedule.",
+   "pause": 0.5,
+   "voice": "en-us+m3",
+   "spk": 0
+  },
+  {
+   "text": "I read the draft last night and I have a few concerns about the early routes.",
+   "pause": 0.35,
+   "voice": "en-us+f5",
+   "spk": 1
+  },
+  {
+   "text": "Same here. The six o'clock bus is always full.",
+   "pause": 0.3,
+   "voice": "en-us+f2",
+   "spk": 3
+  },
+  {
+   "text": "We looked at adding a second bus, but the budget is tight this year.",
+   "pause": 0.5,
+   "voice": "en-gb-x-rp+m7",
+   "spk": 2
+  },
+  {
+   "text": "How tight?",
+   "pause": 0.25,
+   "voice": "en-us+m3",
+   "spk": 0
+  },
+  {
+   "text": "About ten percent less than last year.",
+   "pause": 0.4,
+   "voice": "en-gb-x-rp+m7",
+   "spk": 2
+  },
+  {
+   "text": "Then maybe we move the later route earlier instead of adding one.",
+   "pause": 0.2,
+   "voice": "en-us+f5",
+   "spk": 1
+  },
+  {
+   "text": "That could work.",
+   "pause": 0.3,
+   "voice": "en-us+f2",
+   "spk": 3
+  },
+  {
+   "text": "Okay. Let's ask the drivers what they think before we decide anything.",
+   "pause": 0.45,
+   "voice": "en-us+m3",
+   "spk": 0
+  },
+  {
+   "text": "I can call them tomorrow morning.",
+   "pause": 0.3,
+   "voice": "en-us+f2",
+   "spk": 3
+  },
+  {
+   "text": "And I will send everyone the numbers from last spring.",
+   "pause": 0.5,
+   "voice": "en-us+f5",
+   "spk": 1
+  },
+  {
+   "text": "Good. Then we meet again next week.",
+   "pause": 0.3,
+   "voice": "en-gb-x-rp+m7",
+   "spk": 2
+  },
+  {
+   "text": "Thanks everyone.",
+   "pause": 0.8,
+   "voice": "en-us+m3",
+   "spk": 0
+  }
+ ]
+}

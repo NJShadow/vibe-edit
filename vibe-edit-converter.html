@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Vibe Edit — Project Converter</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --panel2:#191e24; --border:#232a32; --border2:#2f3843;
+    --text:#e7edf3; --muted:#8b98a6; --accent:#2f9bff; --ok:#31c48d; --err:#ef5a5a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:grid;place-items:start center;min-height:100vh;padding:34px 18px 60px}
+  .wrap{width:min(680px,100%)}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  svg.mark{width:40px;height:38px;flex:none}
+  h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.3px}
+  h1 b{color:var(--accent)}
+  .sub{color:var(--muted);font-size:12.5px;margin:0 0 22px 52px}
+  .drop{border:2px dashed var(--border2);border-radius:14px;background:var(--panel);
+    padding:38px 20px;text-align:center;transition:all .15s;cursor:pointer}
+  .drop:hover,.drop.over{border-color:var(--accent);background:var(--panel2)}
+  .drop strong{display:block;font-size:15px;margin-bottom:4px}
+  .drop span{color:var(--muted);font-size:12.5px}
+  .list{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;align-items:center;gap:10px;background:var(--panel);
+    border:1px solid var(--border);border-radius:10px;padding:10px 13px}
+  .row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+  .row .st{font-size:11.5px;color:var(--muted);flex:none}
+  .row.ok .st{color:var(--ok)} .row.err .st{color:var(--err)}
+  .btn{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:10px 18px;
+    font-size:13.5px;font-weight:600;cursor:pointer;margin-top:16px}
+  .btn:disabled{opacity:.45;cursor:default}
+  .btn.ghost{background:transparent;border:1px solid var(--border2);color:var(--text);margin-left:8px}
+  .note{margin-top:20px;font-size:12px;color:var(--muted);line-height:1.6;
+    border-top:1px solid var(--border);padding-top:14px}
+  .note b{color:var(--text);font-weight:600}
+  code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:11.5px}
+</style>
+<div class="wrap">
+  <header>
+    <svg class="mark" viewBox="0 0 118 116" aria-hidden="true"><defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2=".6">
+        <stop offset="0" stop-color="#63c8ff"/><stop offset=".55" stop-color="#2f9bff"/>
+        <stop offset="1" stop-color="#1668ff"/></linearGradient></defs>
+      <g fill="url(#g)">
+        <path d="M6,34 C34,2 68,44 114,8 C74,52 38,16 6,34 Z"/>
+        <path d="M4,64 C32,32 66,74 112,38 C72,82 36,46 4,64 Z"/>
+        <path d="M2,94 C30,62 64,104 110,68 C70,112 34,76 2,94 Z"/>
+      </g></svg>
+    <h1>VIBE <b>EDIT</b> — Project Converter</h1>
+  </header>
+  <p class="sub">Converts older <code>.cutroom</code> projects to the new <code>.vibe</code> format.</p>
+
+  <div class="drop" id="drop">
+    <strong>Drop .cutroom files here</strong>
+    <span>or click to choose — you can select as many as you like</span>
+    <input type="file" id="file" multiple accept=".cutroom,.vibe,application/json" hidden>
+  </div>
+
+  <div class="list" id="list"></div>
+  <div>
+    <button class="btn" id="go" disabled>Convert &amp; download</button>
+    <button class="btn ghost" id="clear" hidden>Clear</button>
+  </div>
+
+  <div class="note">
+    <b>Nothing leaves your computer.</b> Conversion happens entirely in this page — no upload, no server.<br><br>
+    <b>Your media is untouched.</b> A project file only stores edits and the <i>paths</i> to your footage,
+    so converting changes the file's label, not your video or audio.<br><br>
+    <b>The original is kept.</b> Converting writes a new <code>.vibe</code> file alongside it; your
+    <code>.cutroom</code> file is not modified or deleted.<br><br>
+    <b>You may not need this.</b> Vibe Edit opens <code>.cutroom</code> projects directly — this tool is
+    just for tidying an older library into one consistent format.
+  </div>
+</div>
+<script>
+const drop=document.getElementById('drop'), fileIn=document.getElementById('file'),
+      list=document.getElementById('list'), go=document.getElementById('go'),
+      clearBtn=document.getElementById('clear');
+let queue=[];
+
+const render=()=>{
+  list.innerHTML=queue.map((q,i)=>
+    `<div class="row ${q.cls||''}"><span class="nm">${esc(q.file.name)}</span>
+     <span class="st">${q.status||'ready'}</span></div>`).join('');
+  go.disabled=!queue.length;
+  clearBtn.hidden=!queue.length;
+};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const add=(files)=>{
+  for(const f of files){
+    if(!/\.(cutroom|vibe|json)$/i.test(f.name)){
+      queue.push({file:f,status:'not a project file',cls:'err'});continue;
+    }
+    queue.push({file:f});
+  }
+  render();
+};
+drop.onclick=()=>fileIn.click();
+fileIn.onchange=e=>add(e.target.files);
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{
+  e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{
+  e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>{if(e.dataTransfer&&e.dataTransfer.files)add(e.dataTransfer.files);});
+clearBtn.onclick=()=>{queue=[];render();};
+
+const readText=f=>new Promise((res,rej)=>{
+  const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('unreadable'));
+  r.readAsText(f);
+});
+
+go.onclick=async()=>{
+  go.disabled=true;
+  for(const q of queue){
+    if(q.cls==='err')continue;
+    try{
+      const raw=await readText(q.file);
+      let d;
+      try{ d=JSON.parse(raw); }
+      catch(e){ q.status='not valid JSON'; q.cls='err'; render(); continue; }
+      // Only accept things that really are projects, so an unrelated .json
+      // cannot be silently relabelled as one.
+      if(!d||!Array.isArray(d.clips)||!['cutroom','vibe-edit'].includes(d.app)){
+        q.status='not a project file'; q.cls='err'; render(); continue;
+      }
+      if(d.app==='vibe-edit'){ q.status='already converted'; q.cls='ok'; render(); continue; }
+      d.app='vibe-edit';
+      d.convertedFrom='cutroom';
+      d.convertedAt=Date.now();
+      const out=new Blob([JSON.stringify(d)],{type:'application/json'});
+      const name=q.file.name.replace(/\.cutroom$/i,'')+'.vibe';
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(out); a.download=name; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      q.status='converted → '+name; q.cls='ok';
+    }catch(err){
+      q.status=(err&&err.message)||'failed'; q.cls='err';
+    }
+    render();
+    await new Promise(r=>setTimeout(r,120));   // let each download start cleanly
+  }
+  go.disabled=false;
+};
+render();
+</script>

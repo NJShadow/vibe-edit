@@ -1,0 +1,16 @@
+# Installed packages (recreated by "npm install")
+node_modules/
+
+# FFmpeg binaries are user-supplied, never committed (see desktop/bin/README.txt)
+desktop/bin/*
+!desktop/bin/README.txt
+
+# Build output and test scratch
+desktop/dist/
+tests/out/
+*.log
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,96 @@
+{
+ "rate": 165,
+ "voice": "en-us+m3",
+ "segments": [
+  {
+   "text": "Good evening and welcome to the program. Tonight we are talking about city gardens.",
+   "pause": 0.6,
+   "voice": "en-us+m3",
+   "spk": 0
+  },
+  {
+   "text": "Thanks for having me. It is great to be here.",
+   "pause": 0.4,
+   "voice": "en-us+f3",
+   "spk": 1
+  },
+  {
+   "text": "So tell us, how did the project start?",
+   "pause": 0.5,
+   "voice": "en-us+m3",
+   "spk": 0
+  },
+  {
+   "text": "It started with an empty lot behind the library and a few neighbors who wanted tomatoes.",
+   "pause": 0.3,
+   "voice": "en-us+f3",
+   "spk": 1
+  },
+  {
+   "text": "And a lot of paperwork, honestly.",
+   "pause": 0.25,
+   "voice": "en-gb-x-rp+m7",
+   "spk": 2
+  },
+  {
+   "text": "Right.",
+   "pause": 0.2,
+   "voice": "en-us+f3",
+   "spk": 1
+  },
+  {
+   "text": "We spent almost a year getting the permits signed.",
+   "pause": 0.7,
+   "voice": "en-gb-x-rp+m7",
+   "spk": 2
+  },
+  {
+   "text": "How many people take part now?",
+   "pause": 0.3,
+   "voice": "en-us+m3",
+   "spk": 0
+  },
+  {
+   "text": "About two hundred families, and the waiting list keeps growing every season.",
+   "pause": 0.15,
+   "voice": "en-us+f3",
+   "spk": 1
+  },
+  {
+   "text": "Which is a good problem to have.",
+   "pause": 0.6,
+   "voice": "en-gb-x-rp+m7",
+   "spk": 2
+  },
+  {
+   "text": "Sure.",
+   "pause": 0.3,
+   "voice": "en-us+m3",
+   "spk": 0
+  },
+  {
+   "text": "What would you tell someone who wants to start one in their own town?",
+   "pause": 0.5,
+   "voice": "en-us+m3",
+   "spk": 0
+  },
+  {
+   "text": "Talk to the neighbors first. Then find a small corner of land and just begin.",
+   "pause": 0.4,
+   "voice": "en-gb-x-rp+m7",
+   "spk": 2
+  },
+  {
+   "text": "And bring good gloves.",
+   "pause": 0.5,
+   "voice": "en-us+f3",
+   "spk": 1
+  },
+  {
+   "text": "Wonderful advice. Thank you both for coming in tonight.",
+   "pause": 1.0,
+   "voice": "en-us+m3",
+   "spk": 0
+  }
+ ]
+}
