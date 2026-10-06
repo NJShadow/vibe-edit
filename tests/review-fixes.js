@@ -2889,6 +2889,71 @@ SECTIONS.push(['samemedia', async (app) => {
   R['samemedia: values'] = { pip, sticky, dup, kinds, misc, swap, leak };
 }]);
 
+/* ========================= section: wedge =========================
+   v4.10.3: a media element whose seek never completes (Windows, an MP3 whose clip
+   had been muted, deleted and dragged back: <audio> stuck "seeking" at
+   readyState 1, silent while the meter moved). The app notices the stall and puts
+   a fresh element on the same file in its place; playback seeks no longer pile up. */
+SECTIONS.push(['wedge', async (app) => {
+  const p = app.page, E = (f, ...a) => p.evaluate(f, ...a), T = (k, ok) => check('wedge: ' + k, ok);
+  const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
+  const FF = path.join(__dirname, '..', 'desktop', 'bin', 'ffmpeg' + (process.platform === 'win32' ? '.exe' : ''));
+  if (!fs.existsSync(FF)) { R['wedge: skipped'] = 'no desktop/bin/ffmpeg'; return; }
+  const dir = path.join(__dirname, 'out', 'wedge'); fs.mkdirSync(dir, { recursive: true });
+  const mp3 = path.join(dir, 'tone.mp3');
+  execFileSync(FF, ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=44100', '-t', '20', '-c:a', 'libmp3lame', '-b:a', '160k', mp3]);
+  await E(async (b64) => {
+    const o = AudioNode.prototype.connect;   // tap what reaches the speakers
+    AudioNode.prototype.connect = function (d, ...a) { const r = o.call(this, d, ...a);
+      if (d instanceof AudioDestinationNode) { const c = d.context; if (!c.__tap) { c.__tap = c.createAnalyser(); c.__tap.fftSize = 2048; } o.call(this, c.__tap); } return r; };
+    window.RMS = () => { const a = audioCtx && audioCtx.__tap; if (!a) return 0; const d = new Float32Array(a.fftSize); a.getFloatTimeDomainData(d); let s = 0; for (const v of d) s += v * v; return Math.sqrt(s / d.length); };
+    await importFiles([new File([Uint8Array.from(atob(b64), c => c.charCodeAt(0))], 'tone.mp3', { type: 'audio/mpeg' })]);
+  }, fs.readFileSync(mp3).toString('base64'));
+  for (let i = 0; i < 50 && !(await E(() => state.media[0] && !state.media[0].loading && !!els[state.media[0].id])); i++) await sleep(200);
+  const playRms = async (ms = 900) => { await E(() => { setPlaying(false); setTime(0.4); setPlaying(true); }); await sleep(ms); const r = await E(() => RMS()); await E(() => setPlaying(false)); await sleep(150); return r; };
+
+  // 1. the reported flow: mute the clip, delete it, add the file back -> sound
+  await E(() => addMediaToTimeline(state.media[0], 0, 'A1'));
+  const r0 = await playRms();
+  await E(() => { const c = state.clips[0]; pushHistory(); c.props.muteClip = true; renderTimeline(); });
+  const rMuted = await playRms();
+  await E(() => { state.selection = state.clips[0].id; deleteSelected(); addMediaToTimeline(state.media[0], 0, 'A1'); });
+  const r1 = await playRms();
+  R['wedge: flow rms'] = [r0, rMuted, r1].map(x => +x.toFixed(3));
+  T('1 muted, deleted and re-added clip plays with sound (and is silent while muted)', r0 > 0.1 && rMuted < 0.01 && r1 > 0.1);
+
+  // 2. a healthy element is never replaced (normal play, jumps, scrubbing)
+  const keep = await E(async () => { const id = state.media[0].id, el = els[id];
+    for (const t of [0.5, 7, 3, 12]) { setTime(t); await new Promise(r => setTimeout(r, 120)); }
+    setPlaying(true); await new Promise(r => setTimeout(r, 1500)); setTime(9); await new Promise(r => setTimeout(r, 800)); setPlaying(false);
+    return els[id] === el; });
+  T('2 a healthy element is kept through playback, jumps and scrubbing', keep);
+
+  // 3. a wedged element (seeking forever at readyState 1, no sound) is replaced and the clip is heard
+  const w = await E(async () => { const id = state.media[0].id, old = els[id];
+    setPlaying(false); old.pause();
+    Object.defineProperty(old, 'seeking', { get: () => true, configurable: true });
+    Object.defineProperty(old, 'readyState', { get: () => 1, configurable: true });
+    old.play = () => Promise.resolve(); old.muted = true; old._skT = performance.now() - 3000;
+    old._proxyMark = 'kept';   // the app's own markers come along
+    setTime(0.4); setPlaying(true); await new Promise(r => setTimeout(r, 1300));
+    const el = els[id], n = audioNodes[id];
+    const out = { replaced: el !== old, tag: el.tagName, src: el.src === old.src, muted: el.muted, playing: !el.paused, wired: !!(n && n.src && n.src.mediaElement === el),
+      oldPaused: old.paused, mark: el._proxyMark, rms: RMS() };
+    setPlaying(false); return out; });
+  R['wedge: revive'] = w;
+  T('3 a wedged element is replaced by a fresh one on the same file, wired to the audio chain', w.replaced && w.tag === 'AUDIO' && w.src && w.wired && w.mark === 'kept');
+  T('3 ...and the clip is heard again', w.playing && w.rms > 0.1);
+
+  // 4. playback seeks don't pile up while one is in flight
+  const g = await E(() => { let n = 0; const f = { seeking: true, _skA: 0, set currentTime(v) { n++; }, get currentTime() { return 0; } };
+    _elSeekTo(f, 1); _elSeekTo(f, 1.1); _elSeekTo(f, 1.2); const a = n; f._skA = performance.now() - 1000; _elSeekTo(f, 2); const b = n; f.seeking = false; _elSeekTo(f, 3); return [a, b, n]; });
+  T('4 a seek in flight is not restarted every frame (again after 0.9 s, or once it lands)', g[0] === 1 && g[1] === 2 && g[2] === 3);
+
+  T('no page errors', app.errors.length === 0);
+  if (app.errors.length) R['wedge: errors'] = app.errors.slice(0, 5);
+}]);
+
 (async () => {
   for (const [name, fn] of SECTIONS) {
     if (process.argv[2] && !process.argv.slice(2).includes(name)) continue;   // node review-fixes.js picture

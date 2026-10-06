@@ -1,6 +1,6 @@
 # Vibe Edit — Engineering Handoff
 
-**App version 4.10.2.** This document is the working reference for whoever picks
+**App version 4.10.3.** This document is the working reference for whoever picks
 this project up next. Read sections 1–4 before changing anything; they encode
 mistakes that have already cost real debugging time.
 
@@ -286,7 +286,8 @@ node pro-tools.js    # ducking (3 paths), speakers (4 recordings), compound clip
 node review-fixes.js # v4.10 full-review regressions (timeline, audio, picture, io, ai, pro, ux,
                      #   xfade, chroma, sweep2 = v4.10.1 follow-up review; axfade = v4.10.2 sound crossfades;
                      #   kfspeed = keys follow speed (+ linked partners on reset/paste); samemedia = one file
-                     #   shown by several clips at once, each on its own decoder);
+                     #   shown by several clips at once, each on its own decoder; wedge = v4.10.3 stuck-seek
+                     #   element replaced);
                      #   `node review-fixes.js <section>` runs one section
 node pro-grade.js    # LUTs vs an analytic grade (GPU+CPU) + the built-in library vs published
                      #   curves/matrices, keyframe curves, speed ramps vs a numeric integral,
@@ -462,7 +463,7 @@ anyone to resell the work — confirm that is intended.
 
 ## 9. Version history
 
-The detailed change log for every version from 3.41 to 4.10.2 — root causes,
+The detailed change log for every version from 3.41 to 4.10.3 — root causes,
 measurements and the reasoning behind each fix — is preserved in
 `HANDOFF-HISTORY.md` beside this file. Consult it when a piece of code looks
 strange; the reason is usually recorded there.

@@ -8090,14 +8090,58 @@ function _wireSeekRedraw(el){
   // right one arrives — exports were never affected (they await each seek).
   if(!el||el._skRe||typeof el.addEventListener!=='function')return;
   el._skRe=true;
-  el.addEventListener('seeked',()=>{if(!state.exporting)requestDraw();});
+  el.addEventListener('seeked',()=>{el._skT=0;if(!state.exporting)requestDraw();});
+  // when the current wait for a seek began (see _elWedged); cleared once it lands
+  el.addEventListener('seeking',()=>{if(!el._skT)el._skT=performance.now();});
+  el.addEventListener('canplay',()=>{el._skT=0;});
+}
+/* v4.10.3: a media element whose seek never completes. Seen on Windows with an
+   MP3: after its clip was muted, deleted and dragged back, the file's <audio>
+   sat in "seeking" at readyState 1 for good — every new seek restarted the wait,
+   so it never played, while the level meter (which reads the import peaks) kept
+   moving. A fresh element on the same file seeks and plays at once, so a stall
+   is noticed and a new element put in its place (same file, same media id). */
+const _ELW_MS=2500,_elReviveAt={};
+function _elWedged(el){
+  return !!(el&&el.seeking&&el._skT&&el.readyState<2&&performance.now()-el._skT>_ELW_MS&&!state.exporting);
+}
+function _elRevive(id){
+  const old=els[id];if(!old||!(old.currentSrc||old.src))return old;
+  const now=performance.now();
+  if(_elReviveAt[id]&&now-_elReviveAt[id]<4000)return old;   // give the new one time to load
+  _elReviveAt[id]=now;
+  const el=document.createElement(old.tagName==='VIDEO'?'video':'audio');
+  el.preload='auto';el.loop=false;el.playsInline=true;   // (never revived during an export, the only time els are muted)
+  try{if(old.crossOrigin)el.crossOrigin=old.crossOrigin;}catch(e){}
+  // keep the app's own markers on the element (proxy/original bookkeeping), not its transient state
+  for(const k of Object.keys(old))if(k[0]==='_'&&!/^_(skRe|skT|skA|vibeNode|rseek|rpark|preroll)$/.test(k))el[k]=old[k];
+  el.src=old.currentSrc||old.src;
+  els[id]=el;
+  // the live audio chain is bound to the element it was built on: drop it so
+  // wireAudio builds a new one for this element on the next play
+  const n=audioNodes[id];
+  if(n&&(!n.src||n.src.mediaElement===old)){delete audioNodes[id];
+    try{n.gain&&n.gain.disconnect();}catch(e){}try{n.src&&n.src.disconnect();}catch(e){}}
+  try{old.pause();}catch(e){}
+  _wireSeekRedraw(el);
+  el.addEventListener('loadeddata',()=>requestDraw(),{once:true});
+  console.warn('Vibe Edit: a media element stopped responding to seeks; replaced it ('+id+')');
+  return el;
+}
+// a playback seek: while one is still in flight, don't pile another on top every
+// frame (each new seek restarts the wait, so a slow file never got to play)
+function _elSeekTo(el,target){
+  const now=performance.now();
+  if(el.seeking&&now-(el._skA||0)<900)return;
+  el._skA=now;try{el.currentTime=target;}catch(e){}
 }
 function syncMediaSeek(){
   // exact seek when paused/scrubbing
   const t=state.time,taken=new Set();
   const pcs=_playClips().filter(c=>c.type==='video'||c.type==='audio');
   for(const c of _smOrder(pcs.filter(c=>c.type==='video'),t).concat(pcs.filter(c=>c.type!=='video'))){   // the picture owns a shared element (_smPlan's owner first)
-    const el=els[c.mediaId];if(!el)continue;
+    let el=els[c.mediaId];if(!el)continue;
+    if(_elWedged(el))el=_elRevive(c.mediaId);
     _wireSeekRedraw(el);
     if(t>=c.start&&t<clipEnd(c)){
       if(taken.has(el))continue;taken.add(el);
@@ -8238,7 +8282,7 @@ function _driveEl(c,el,key,t){
     }
   }else if(c.freeze){   // a freeze frame: parked on its frame, never running (and silent)
     if(Math.abs(el.currentTime-target)>0.02){try{el.currentTime=target;}catch(e){}}
-  }else if(Math.abs(el.currentTime-target)>0.22){try{el.currentTime=target;}catch(e){}}
+  }else if(Math.abs(el.currentTime-target)>0.22)_elSeekTo(el,target);
   const vol=c.props.reverse?0:_clipLiveVol(c,t);   // reversed sound plays from _revVoices
   const node=audioNodes[key];
   if(node&&node.gain){el.volume=1;node.gain.gain.value=vol;applyLiveFx(key,c.props);}
@@ -8325,7 +8369,8 @@ function syncMediaPlayback(){
   for(const v of Object.values(_revVoices))v.used=false;
   const auxUsed=new Set();
   for(const c of order){
-    const el=els[c.mediaId];if(!el)continue;
+    let el=els[c.mediaId];if(!el)continue;
+    if(_elWedged(el))el=_elRevive(c.mediaId);
     _wireSeekRedraw(el);
     const on=t>=c.start&&t<clipEnd(c);
     if(on){
@@ -14553,7 +14598,7 @@ addEventListener('keydown',e=>{
 });
 
 /* ---------- Project save / load ---------- */
-const APP_VERSION='4.10.2';
+const APP_VERSION='4.10.3';
 const PROJECT_VERSION=1;
 // What the import probe learned about a file. Saved with the project so a
 // reopened project still knows the original has sparse keyframes / needs a
