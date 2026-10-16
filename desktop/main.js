@@ -1082,6 +1082,15 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
+// Windows reports a window that is fully covered by another as hidden, and
+// Chromium then stops presenting video frames to it (a background timer takes
+// over at ~4 per second). backgroundThrottling:false doesn't cover that, so a
+// Precise export rendered while the user worked in a browser drew stale frames
+// (repeats + skips, "looks like a lower frame rate"). Keep the window live.
+app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.whenReady().then(() => {
   buildMenu();
   createWindow();

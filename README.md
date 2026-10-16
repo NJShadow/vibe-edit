@@ -3,7 +3,7 @@
 A complete video editor that runs entirely on your own machine — in a browser
 tab or as a desktop app. No server, no uploads, no accounts.
 
-**Version 4.10.3** — local AI editing (edit by transcript, remove fillers and pauses,
+**Version 4.10.4** — local AI editing (edit by transcript, remove fillers and pauses,
 captions that follow your edit, scene detection, beat sync, auto-reframe) and Pro tools:
 compound clips (with speed and reverse), auto-ducking, speaker labels (CAM++ in the
 desktop app), a proxy workflow, LUT grading with a built-in library, grading scopes,

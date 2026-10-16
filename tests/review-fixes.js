@@ -2910,7 +2910,8 @@ SECTIONS.push(['wedge', async (app) => {
     await importFiles([new File([Uint8Array.from(atob(b64), c => c.charCodeAt(0))], 'tone.mp3', { type: 'audio/mpeg' })]);
   }, fs.readFileSync(mp3).toString('base64'));
   for (let i = 0; i < 50 && !(await E(() => state.media[0] && !state.media[0].loading && !!els[state.media[0].id])); i++) await sleep(200);
-  const playRms = async (ms = 900) => { await E(() => { setPlaying(false); setTime(0.4); setPlaying(true); }); await sleep(ms); const r = await E(() => RMS()); await E(() => setPlaying(false)); await sleep(150); return r; };
+  const playRms = async (ms = 900) => { await E(() => { setPlaying(false); setTime(0.4); setPlaying(true); }); await sleep(ms);   // loudest of 2 s of samples: the page can be busy right after an import
+    let r = 0; for (let i = 0; i < 10; i++) { r = Math.max(r, await E(() => RMS())); await sleep(200); } await E(() => setPlaying(false)); await sleep(150); return r; };
 
   // 1. the reported flow: mute the clip, delete it, add the file back -> sound
   await E(() => addMediaToTimeline(state.media[0], 0, 'A1'));
@@ -2952,6 +2953,50 @@ SECTIONS.push(['wedge', async (app) => {
 
   T('no page errors', app.errors.length === 0);
   if (app.errors.length) R['wedge: errors'] = app.errors.slice(0, 5);
+}]);
+
+/* ========================= section: stale =========================
+   v4.10.4: a Precise export made while Vibe Edit was covered by another window
+   (Windows reports it hidden) had ~40% repeated frames: 'seeked' fired, no frame
+   was presented (rVFC silent), the 200 ms fallback won and the PREVIOUS frame
+   was drawn. Simulated here with a decoder that announces 'seeked' at once but
+   only delivers the frame 300 ms later. ramp25.webm: frame k is gray ≈ 20+2k. */
+SECTIONS.push(['stale', async (app) => {
+  const p = app.page, E = (f, ...a) => p.evaluate(f, ...a), T = (k, ok) => check('stale: ' + k, ok);
+  const fs = require('fs'), path = require('path');
+  const b64 = fs.readFileSync(path.join(__dirname, 'fixtures', 'blend', 'ramp25.webm')).toString('base64');
+  const run = (verify) => E(async (b, verify) => {
+    const url = URL.createObjectURL(new Blob([Uint8Array.from(atob(b), c => c.charCodeAt(0))], { type: 'video/webm' }));
+    const el = await loadMediaEl('video', url); els.r = el; _wireSeekRedraw(el);
+    state.media = [{ id: 'r', type: 'video', name: 'r', url, duration: el.duration, w: 64, h: 36, srcFps: 25 }];
+    state.project.fps = 25; state.playing = false;
+    state.clips = [makeClip({ type: 'video', track: 'V1', start: 0, duration: 3, mediaId: 'r', name: 'r' })];
+    // the lagging decoder: 'seeked' at once, the frame itself 300 ms later, nothing presented
+    const desc = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'currentTime');
+    let want = null;
+    Object.defineProperty(el, 'currentTime', { configurable: true, get() { return want != null ? want : desc.get.call(el); },
+      set(v) { want = v; setTimeout(() => desc.set.call(el, v), 300); el.dispatchEvent(new Event('seeked')); } });
+    el.requestVideoFrameCallback = () => 0;
+    const real = window._awaitFreshFrame; if (!verify) window._awaitFreshFrame = async () => true;
+    const lev = []; state.exporting = true;
+    for (let i = 0; i < 20; i++) { state.time = 0.5 + i / 25; await seekMediaExact(state.time); drawFrame();
+      const c = document.getElementById('preview'); lev.push(c.getContext('2d').getImageData(c.width >> 1, c.height >> 1, 1, 1).data[1]); }
+    state.exporting = false; window._awaitFreshFrame = real; delete el.currentTime;
+    const steps = lev.slice(1).map((v, i) => v - lev[i]);
+    return { lev, repeats: steps.filter(d => Math.abs(d) < 1).length, stats: Object.assign({}, _freshStats) };
+  }, b64, verify);
+  const before = await run(false), after = await run(true);
+  R['stale: without check'] = { repeats: before.repeats, lev: before.lev.join(',') };
+  R['stale: with check'] = { repeats: after.repeats, lev: after.lev.join(','), stats: after.stats };
+  const wrong = before.lev.filter((v, i) => Math.abs(v - after.lev[i]) >= 1).length;
+  const rising = after.lev.slice(1).every((v, i) => v - after.lev[i] >= 1 && v - after.lev[i] <= 4);   // one source frame per export frame (≈ +2 gray)
+  T('1 (control) without the held-frame check the lagging decoder draws the previous frame', wrong >= 15);
+  T('1 with it, every exported frame is the right one and advances by one source frame', after.repeats === 0 && rising && after.stats.stale === 0);
+  // Electron: a covered window is not treated as hidden
+  const main = fs.readFileSync(path.join(__dirname, '..', 'desktop', 'main.js'), 'utf8');
+  T('2 desktop: occlusion detection and occluded-window backgrounding are off', /CalculateNativeWinOcclusion/.test(main) && /disable-backgrounding-occluded-windows/.test(main));
+  T('no page errors', app.errors.length === 0);
+  if (app.errors.length) R['stale: errors'] = app.errors.slice(0, 5);
 }]);
 
 (async () => {

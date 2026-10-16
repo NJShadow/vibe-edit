@@ -11596,6 +11596,44 @@ async function renderAudioOffline(D,targetSR){
   if(!any)return null;
   return ctx.startRendering();
 }
+/* v4.10.4: the frame the element HOLDS, checked without relying on the screen.
+   'seeked' + one presented frame (requestVideoFrameCallback) is not proof: when
+   the window is covered (Windows reports it hidden), Chromium stops presenting
+   video and updates the element's frame from a slow background timer, rVFC never
+   fires, the 200 ms fallback wins, and the PREVIOUS frame was drawn — a Precise
+   export made while the user browsed came out with ~40% repeated frames.
+   new VideoFrame(el).timestamp is the start time of the frame the element holds
+   right now, independent of presentation, so wait (briefly) until it is the
+   frame that contains the target. Returns false if it never arrived. */
+const _freshStats={checked:0,waited:0,stale:0};
+function _heldTs(el){
+  if(typeof VideoFrame!=='function'||!el||el.readyState<2)return null;   // can't tell
+  try{const f=new VideoFrame(el);const ts=f.timestamp/1e6;f.close();return isFinite(ts)?ts:null;}catch(e){return null;}
+}
+// prevTs: the frame held BEFORE this seek. Done when the held frame contains the
+// target — or, for files whose frames aren't evenly spaced, when the decoder has
+// moved off the old frame and settled (not seeking, same frame for 120 ms).
+async function _awaitFreshFrame(el,target,c,prevTs){
+  const m=state.media.find(x=>x.id===c.mediaId);
+  const fd=1/Math.max(1,(m&&m.srcFps)||state.project.fps||30);
+  const covers=ts=>ts==null||(ts<=target+0.002&&target-ts<fd+0.002);
+  _freshStats.checked++;
+  let ts=_heldTs(el);
+  if(covers(ts))return true;
+  _freshStats.waited++;
+  const t0=performance.now();let nudged=0,last=ts,since=t0;
+  while(performance.now()-t0<1500){
+    await new Promise(r=>setTimeout(r,12));
+    ts=_heldTs(el);const now=performance.now();
+    if(covers(ts))return true;
+    if(ts!==last){last=ts;since=now;}
+    else if(ts!==prevTs&&!el.seeking&&now-since>120)return true;   // moved on and settled
+    const dt=now-t0;
+    if(!el.seeking&&((dt>300&&nudged===0)||(dt>900&&nudged===1))){nudged++;try{el.currentTime=target;}catch(e){}}
+  }
+  _freshStats.stale++;
+  return false;
+}
 function seekMediaExact(t){
   const waits=[],P=_smPlan(t,true),own=new Set(P.owner.values());
   for(const c of _playClips()){
@@ -11611,6 +11649,7 @@ function seekMediaExact(t){
       const frameDur=1/((state.project.fps||30)*Math.max(0.0625,c.props.speed||1));
       const tol=Math.min(0.004,frameDur*0.25);
       if(Math.abs(el.currentTime-target)>tol){
+        const prevTs=state.exporting?_heldTs(el):null;
         waits.push(new Promise(res=>{let done=false;
           const fin=()=>{if(done)return;done=true;el.removeEventListener('seeked',fin);
             // After 'seeked' fires the decoded frame may not yet be presented for
@@ -11646,8 +11685,8 @@ function seekMediaExact(t){
           // generous timeout: a seek that crosses a long GOP can take a while, and
           // giving up early is what produces a repeated frame.
           setTimeout(fin,800);
-          try{el.currentTime=target;}catch(e){fin();}}));
-      }
+          try{el.currentTime=target;}catch(e){fin();}}).then(()=>state.exporting?_awaitFreshFrame(el,target,c,prevTs):true));
+      }else if(state.exporting)waits.push(_awaitFreshFrame(el,target,c,_heldTs(el)));
     }
   }
   // hidden decoders: release what t doesn't need first (one per-file pool), then seek
@@ -12124,6 +12163,7 @@ async function renderPrecise(cfg){
     }catch(e){/* render video-only if audio encode fails */}
   }
   // frame loop
+  _freshStats.checked=_freshStats.waited=_freshStats.stale=0;
   for(let i=0;i<N;i++){
     if(exportUI.discard){try{venc.close();}catch(e){}return bail('Render discarded');}
     if(encErr)return bail('Encoder error: '+encErr);
@@ -12144,6 +12184,8 @@ async function renderPrecise(cfg){
   }
   try{await venc.flush();venc.close();}catch(e){}
   if(encErr)return bail('Encoder error: '+encErr);
+  window._lastFreshStats=Object.assign({},_freshStats);   // (read by tests)
+  if(_freshStats.stale>0)toast(_freshStats.stale+' frame'+(_freshStats.stale>1?'s':'')+' may repeat in this export — the video decoder didn’t deliver '+(_freshStats.stale>1?'them':'it')+' in time. Exporting again usually fixes it.','err',9000);
   let buf;
   try{muxer.finalize();buf=muxer.target.buffer;}catch(e){return bail('Muxing failed: '+e.message);}
   const blob=new Blob([buf],{type:'video/webm'});
@@ -14598,7 +14640,7 @@ addEventListener('keydown',e=>{
 });
 
 /* ---------- Project save / load ---------- */
-const APP_VERSION='4.10.3';
+const APP_VERSION='4.10.4';
 const PROJECT_VERSION=1;
 // What the import probe learned about a file. Saved with the project so a
 // reopened project still knows the original has sparse keyframes / needs a
