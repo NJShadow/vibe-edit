@@ -1159,6 +1159,9 @@ kbd{border-radius:6px;box-shadow:0 1px 0 var(--hl) inset}
 .ai-radio small{display:block;font-size:11px;color:var(--muted);line-height:1.45;margin-top:2px}
 /* Guide → About & licenses */
 .gdabout{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+.gdlicense{margin:0 0 12px;font-size:12px;color:var(--muted)}
+.gdlicense summary{cursor:pointer;color:var(--text);width:max-content}
+.gdlicense pre{white-space:pre-wrap;font-family:inherit;font-size:11.5px;line-height:1.55;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin:8px 0 0;max-height:260px;overflow:auto}
 .gdcredits{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
 .gdcredit{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
 .gdcredit b{display:block;font-size:12.5px;color:var(--text)}
@@ -6994,6 +6997,8 @@ const GUIDE=[
        'Vibe Edit also autosaves, and offers to restore after a crash.']},
 ]},
 ];
+// Vibe Edit's own license (the LICENSE file at the project root), shown in Guide \u2192 About & licenses.
+const APP_LICENSE="MIT License\n\nCopyright (c) 2026 Mike Hartnett\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.";
 // Third-party software Vibe Edit uses (shown in Guide \u2192 About & licenses).
 const GUIDE_CREDITS=[
   ['Electron','MIT License','The desktop app shell. It includes Chromium; Chromium\u2019s own license notices ship with the app (LICENSES.chromium.html).'],
@@ -7037,7 +7042,10 @@ function openGuide(query){
       +SHORTCUTS.map(k=>'<div class="gdkbdrow">'+kbdKeysHTML(k[1])+'<span>'+esc(k[0])+'</span></div>').join('')
       +'</div></section>'
       +'<section id="gdseccredits"><h4>About &amp; licenses</h4><p class="gdabout">Vibe Edit '+esc(APP_VERSION)
-      +' \u2014 runs entirely on your computer. It is built on these open-source projects, used under their licenses:</p>'
+      +' \u2014 runs entirely on your computer. Copyright \u00a9 2026 Mike Hartnett. Released under the MIT License: free to use, change and share, '
+      +'provided \u201cas is\u201d, without warranty of any kind, and the authors are not liable for any damages arising from its use.</p>'
+      +'<details class="gdlicense"><summary title="Read the full MIT License for Vibe Edit">Full license text</summary><pre>'+esc(APP_LICENSE.replace(/([^\n])\n(?!\n)/g,'$1 '))+'</pre></details>'
+      +'<p class="gdabout">Vibe Edit is built on these open-source projects, used under their licenses:</p>'
       +'<div class="gdcredits">'+GUIDE_CREDITS.map(c=>'<div class="gdcredit"><b>'+esc(c[0])+'</b><span class="gdlic">'+esc(c[1])+'</span><p>'+esc(c[2])+'</p></div>').join('')
       +'</div></section>';
     nav.querySelectorAll('[data-gd]').forEach(b=>b.onclick=()=>{
@@ -14640,7 +14648,7 @@ addEventListener('keydown',e=>{
 });
 
 /* ---------- Project save / load ---------- */
-const APP_VERSION='4.10.4';
+const APP_VERSION='4.10.5';
 const PROJECT_VERSION=1;
 // What the import probe learned about a file. Saved with the project so a
 // reopened project still knows the original has sparse keyframes / needs a

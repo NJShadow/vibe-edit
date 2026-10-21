@@ -2311,6 +2311,13 @@ SECTIONS.push(['sweep2', async (app) => {
   const tst = await p.evaluate(() => { document.getElementById('toasts').innerHTML = ''; for (let k = 0; k < 5; k++) toast('Same message'); toast('Other');
     const n = document.querySelectorAll('#toasts .toast').length, pe = getComputedStyle(document.getElementById('toasts')).pointerEvents; document.getElementById('toasts').innerHTML = ''; return { n, pe }; });
   T('14 toasts: click-through, identical messages don’t stack', tst.n === 2 && tst.pe === 'none');
+  // 15. Vibe Edit's own license: the LICENSE file, shown in Guide -> About & licenses
+  const lic = await p.evaluate(async () => { openGuide(); await new Promise(r => setTimeout(r, 200));
+    const s = document.getElementById('gdseccredits'), pre = s && s.querySelector('.gdlicense pre'); const out = { about: s ? s.querySelector('.gdabout').textContent : '', pre: pre ? pre.textContent : '', src: APP_LICENSE };
+    closeOverlay(true); return out; });
+  const LIC = require('fs').readFileSync(require('path').join(__dirname, '..', 'LICENSE'), 'utf8').trim();
+  T('15 the app carries the LICENSE file verbatim, and About shows MIT, the copyright holder and the "as is" disclaimer',
+    lic.src === LIC && /^MIT License/.test(LIC) && /Mike Hartnett/.test(lic.about) && /as is/i.test(lic.about) && /WITHOUT WARRANTY OF ANY KIND/.test(lic.pre));
   T('no page errors', app.errors.length === 0);
   if (app.errors.length) R['sweep2: errors'] = app.errors.slice(0, 5);
 }]);

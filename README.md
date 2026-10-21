@@ -3,7 +3,7 @@
 A complete video editor that runs entirely on your own machine — in a browser
 tab or as a desktop app. No server, no uploads, no accounts.
 
-**Version 4.10.4** — local AI editing (edit by transcript, remove fillers and pauses,
+**Version 4.10.5** — local AI editing (edit by transcript, remove fillers and pauses,
 captions that follow your edit, scene detection, beat sync, auto-reframe) and Pro tools:
 compound clips (with speed and reverse), auto-ducking, speaker labels (CAM++ in the
 desktop app), a proxy workflow, LUT grading with a built-in library, grading scopes,
@@ -79,3 +79,12 @@ npm run all                 # every suite, including the AI ground-truth tests
 - FFmpeg is user-supplied and never redistributed, which keeps the project clear
   of its licensing obligations.
 - Press **`?`** inside the app for a searchable guide to every tool.
+
+---
+
+## License
+
+Vibe Edit is released under the [MIT License](LICENSE) — Copyright (c) 2026 Mike Hartnett.
+You're free to use, change and share it; it is provided **"as is", without warranty of any
+kind**, and the authors are not liable for any damages arising from its use. The open-source
+projects it builds on keep their own licenses (listed in the app under Guide → About & licenses).

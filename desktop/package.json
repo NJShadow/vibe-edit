@@ -1,10 +1,10 @@
 {
   "name": "vibe-edit",
   "productName": "Vibe Edit",
-  "version": "4.10.4",
+  "version": "4.10.5",
   "description": "Fast, free, offline video editor",
   "main": "main.js",
-  "author": "Vibe Edit",
+  "author": "Mike Hartnett",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -54,6 +54,16 @@
           "**/*"
         ]
       }
-    ]
+    ],
+    "copyright": "Copyright (c) 2026 Mike Hartnett",
+    "extraFiles": [
+      {
+        "from": "../LICENSE",
+        "to": "LICENSE.txt"
+      }
+    ],
+    "nsis": {
+      "license": "../LICENSE"
+    }
   }
 }

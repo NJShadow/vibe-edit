@@ -1,6 +1,6 @@
 # Vibe Edit — Engineering Handoff
 
-**App version 4.10.4.** This document is the working reference for whoever picks
+**App version 4.10.5.** This document is the working reference for whoever picks
 this project up next. Read sections 1–4 before changing anything; they encode
 mistakes that have already cost real debugging time.
 
@@ -47,6 +47,7 @@ codec dumps. Take those seriously; they have repeatedly contained the answer.
 ```
 vibe-edit/
 ├── vibe-edit.html              The ENTIRE editor. UI, engine, exporter. ~15,000 lines.
+├── LICENSE                     MIT License (Copyright (c) 2026 Mike Hartnett); the app's APP_LICENSE must match it
 ├── vibe-edit-converter.html    Standalone tool: converts old .cutroom projects to .vibe
 ├── desktop/                    Electron wrapper
 │   ├── main.js                 Main process: FFmpeg, dialogs, IPC (~1,000 lines)
@@ -463,7 +464,7 @@ anyone to resell the work — confirm that is intended.
 
 ## 9. Version history
 
-The detailed change log for every version from 3.41 to 4.10.4 — root causes,
+The detailed change log for every version from 3.41 to 4.10.5 — root causes,
 measurements and the reasoning behind each fix — is preserved in
 `HANDOFF-HISTORY.md` beside this file. Consult it when a piece of code looks
 strange; the reason is usually recorded there.
